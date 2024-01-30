@@ -10,6 +10,8 @@ First, you will need to install the dependencies with the following command:
 pip install -r requirements.txt
 ```
 
+For Motion, you will need to make sure Redis is running (I use Docker for this).
+
 Next, you will need to define API keys in a `.env` file in the root of the repository. The `.env` file should look like this:
 
 ```
@@ -24,3 +26,7 @@ Then, you can run the demo with the following command:
 ```bash
 streamlit run dashboard.py
 ```
+
+Here is a screenshot of the Streamlit after several queries:
+
+![Streamlit](screenshot.png)
