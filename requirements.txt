@@ -1,0 +1,6 @@
+motion-python
+streamlit
+openai
+instructor
+rich
+python-dotenv

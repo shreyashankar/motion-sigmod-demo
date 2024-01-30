@@ -1,0 +1,142 @@
+{
+    "name": "Fashion",
+    "nodes": [
+        {
+            "id": "2",
+            "position": {
+                "x": 0,
+                "y": 200
+            },
+            "data": {
+                "label": "note"
+            },
+            "type": "key"
+        },
+        {
+            "id": "3",
+            "position": {
+                "x": 200,
+                "y": 200
+            },
+            "data": {
+                "label": "note",
+                "udf": "@Fashion.serve(\"note\")\ndef note(state, props):\n    recommendation = props[\"recommendation\"]\n    query = props[\"event\"]\n    gender = state[\"gender\"]\n\n    query_summary = state[\"query_summary\"]\n    if len(query_summary) > 0:\n        query_summary = f\" Here's a summary of my previous searches, which you can use to figure out my lifestyle and potential wardrobe preferences: {query_summary}.\"\n\n    return client.chat.completions.create(\n        model=\"gpt-35-turbo\",\n        response_model=NotePrompt,\n        messages=[\n            {\n                \"role\": \"system\",\n                \"content\": f\"You are a professional stylist for {gender}.\",\n            },\n            {\n                \"role\": \"user\",\n                \"content\": f\"I am your client, a {state['occupation']} and {state['age']} years old.{query_summary} For `{query}`, you recommended the following item for me to buy: {recommendation}. Please write a short 2-3 sentence note for why I should buy this item, referencing only my occupation and preferences if they are relevant to the event. If you don't have enough information, describe why this item is in style or why it's a good fit for the event.\",\n            },\n        ],\n    ).note  # type: ignore\n"
+            },
+            "type": "serve"
+        },
+        {
+            "id": "4",
+            "position": {
+                "x": 0,
+                "y": 300
+            },
+            "data": {
+                "label": "recommend"
+            },
+            "type": "key"
+        },
+        {
+            "id": "5",
+            "position": {
+                "x": 200,
+                "y": 300
+            },
+            "data": {
+                "label": "recommend",
+                "udf": "@Fashion.serve(\"recommend\")\ndef recommend(state, props):\n    # Construct prompt\n    query = props[\"event\"]\n    gender = state[\"gender\"]\n\n    already_rec = state[\"previous_recommendations\"].get(query.lower(), [])\n    if len(already_rec) > 0:\n        already_rec = \", \".join(already_rec)\n        already_rec = f\" Avoid recommending the following: {already_rec}.\"\n    else:\n        already_rec = \"\"\n    query_summary = state[\"query_summary\"]\n    if len(query_summary) > 0:\n        query_summary = f\" Here's a summary of my previous searches, which you can use to figure out my lifestyle and potential wardrobe preferences: {query_summary}.\"\n\n    return client.chat.completions.create(\n        model=\"gpt-35-turbo\",\n        response_model=RecommendationPrompt,\n        messages=[\n            {\n                \"role\": \"system\",\n                \"content\": f\"You are a professional stylist for {gender}.\",\n            },\n            {\n                \"role\": \"user\",\n                \"content\": f\"I am your client, a {state['occupation']} and {state['age']} years old.{query_summary} What {gender} apparel items should I buy to wear to {query}?{already_rec} Make sure your suggestions are appropriate for the dress code. Be highly specific for each item, including colors, cuts, and styles.\",\n            },\n        ],\n    )  # type: ignore\n"
+            },
+            "type": "serve"
+        },
+        {
+            "id": "6",
+            "position": {
+                "x": 800,
+                "y": 300
+            },
+            "data": {
+                "label": "update_previous_recommendations",
+                "udf": "@Fashion.update(\"recommend\")\ndef update_previous_recommendations(state, props):\n    # Ask LLM to extract items from the serve_result\n    llm_response = props.serve_result.model_dump()\n    gender = state[\"gender\"]\n    query = props[\"event\"]\n\n    already_rec = state[\"previous_recommendations\"].get(query.lower(), [])\n    if len(already_rec) > 0:\n        already_rec = \", \".join(already_rec)\n        already_rec = f\" You have also recommended {already_rec}.\"\n    else:\n        already_rec = \"\"\n\n    items = client.chat.completions.create(\n        model=\"gpt-4-2\",\n        response_model=ItemListPrompt,\n        messages=[\n            {\n                \"role\": \"system\",\n                \"content\": f\"You are a professional stylist for {gender}.\",\n            },\n            {\n                \"role\": \"user\",\n                \"content\": f\"You recommended the following items for `{query}`: {str(llm_response)}.{already_rec} From these recommendations, generate a list of at most 5 items you've recommended, with each item being no more than 3 words long.\",\n            },\n        ],\n    )  # type: ignore\n\n    recs = state[\"previous_recommendations\"]\n    recs[query.lower()] = items.recommendations\n    return {\"previous_recommendations\": recs}\n"
+            },
+            "type": "update"
+        },
+        {
+            "id": "7",
+            "position": {
+                "x": 1400,
+                "y": 300
+            },
+            "data": {
+                "label": "update_search_queries",
+                "udf": "@Fashion.update(\"recommend\")\ndef update_search_queries(state, props):\n    # Maintain a summary of search queries\n    query = props[\"event\"]\n    gender = state[\"gender\"]\n    queries = state[\"search_history\"] + [query]\n    summary = state[\"query_summary\"]\n\n    if len(queries) >= 3:\n        summary = client.chat.completions.create(\n            model=\"gpt-4-2\",\n            response_model=SummaryPrompt,\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. I've been asking you for recommendations for what to buy for various events.\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"Here's my previous summary of events I've wanted to be styled for: {state['search_history']}\\n\\nI've made a new query, {query}. Please summarize my event styling request history in 3 sentences, describing my lifestyle and other information a stylist should consider when styling me in the future.\",\n                },\n            ],\n        ).summary\n\n    return {\"search_history\": queries, \"query_summary\": summary}\n"
+            },
+            "type": "update"
+        },
+        {
+            "id": "1",
+            "position": {
+                "x": 1000,
+                "y": 0
+            },
+            "data": {
+                "label": "state"
+            },
+            "type": "state"
+        }
+    ],
+    "edges": [
+        {
+            "id": "e2-3",
+            "source": "2",
+            "target": "3",
+            "targetHandle": "left"
+        },
+        {
+            "id": "e1-3",
+            "source": "1",
+            "target": "3",
+            "targetHandle": "top"
+        },
+        {
+            "id": "e4-5",
+            "source": "4",
+            "target": "5",
+            "targetHandle": "left"
+        },
+        {
+            "id": "e1-5",
+            "source": "1",
+            "target": "5",
+            "targetHandle": "top"
+        },
+        {
+            "id": "e6-1",
+            "target": "1",
+            "source": "6",
+            "sourceHandle": "top",
+            "animated": true
+        },
+        {
+            "id": "e5-6",
+            "source": "5",
+            "sourceHandle": "right",
+            "target": "6",
+            "targetHandle": "left",
+            "animated": true
+        },
+        {
+            "id": "e7-1",
+            "target": "1",
+            "source": "7",
+            "sourceHandle": "top",
+            "animated": true
+        },
+        {
+            "id": "e5-7",
+            "source": "5",
+            "sourceHandle": "right",
+            "target": "7",
+            "targetHandle": "left",
+            "animated": true
+        }
+    ]
+}
