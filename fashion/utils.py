@@ -33,12 +33,19 @@ class ItemListPrompt(BaseModel):
 class SummaryPrompt(BaseModel):
     summary: str = Field(
         ...,
-        description="Summary of the recommendations.",
+        description="Summary of the my preferences, lifestyle, and events I attend.",
+    )
+
+
+class EventSuggestionPrompt(BaseModel):
+    event: str = Field(
+        ...,
+        description="An event I might like to attend based on my preferences and lifestyle.",
     )
 
 
 class NotePrompt(BaseModel):
     note: str = Field(
         ...,
-        description="Note to the user for why they should buy the item.",
+        description="Short note for why I should buy this item.",
     )
