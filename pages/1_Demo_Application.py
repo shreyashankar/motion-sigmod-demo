@@ -164,7 +164,7 @@ else:
     # Check if a query was entered
     if query:
         st.session_state.query = query
-        with st.spinner("Querying LLM..."):
+        with st.spinner("(Re)generating results by querying LLM..."):
             i = 0
             # Show the first set of recommendations
             st.write("#### Results")

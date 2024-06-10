@@ -3,7 +3,6 @@ import streamlit as st
 st.set_page_config(
     page_title="Hello",
     page_icon="👋",
-    initial_sidebar_state="expanded",
     layout="wide",
 )
 
@@ -18,10 +17,10 @@ st.markdown(
     **👈 Select a mode of exploration** to either (as an end-user) interact with a Motion-powered application or (as a developer) explore summaries of user feedback and external context incrementally maintained by Motion.
     
     ### Be an End-User: Explore our AI Stylist Application
-    - Our AI stylist application takes into consideration some basic information about you and suggests items to buy for events of your choice.
-    - You can toggle between using Motion's summaries and not using them to see the difference in the quality of recommendations and the speed of the application. 
-    - Using Motion uses summaries of your feedback and external context in prompts to suggest items to buy for your specific event.
-    - Not using Motion simply uses *all* content retrieved by RAG (previous recommendations to avoid, your feedback/what you like or dislike, Fashion trends from Google News, etc.) in the prompt.
+    - Our stylist application uses your basic information to recommend items for your chosen events.
+    - Toggle Motion's summaries on or off to compare recommendation quality and application speed.
+    - With Motion, summaries of your feedback and external context enhance item suggestions for your events.
+    - Without Motion, the application uses all available content, including past recommendations, your preferences, and current fashion trends.
     ### Be a Developer: Explore Summaries Used as Prompt Sub-Parts and Real-Time Prompt Updates
     - Explore the summaries incrementally maintained by Motion. There is a global summary of fashion trends (used for all users' prompts) and user-specific summaries of feedback and their query history.
     - You can select a user to inspect their summaries.
