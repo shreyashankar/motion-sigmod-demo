@@ -28,5 +28,7 @@ st.markdown(
     ### Want to learn more about Motion?
     - Visit [Motion's github repo](https://github.com/dm4ml/motion)
     - Dive into our [documentation](https://dm4ml.github.io/motion/docs)
+    - Check out the [Source Code](https://github.com/shreyashankar/motion-sigmod-demo)
+    - Read our [Demo Paper](https://www.sh-reya.com/motion_sigmod_demo.pdf)
 """
 )
