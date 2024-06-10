@@ -37,7 +37,7 @@ st.set_page_config(layout="wide")
 
 st.subheader("Recent Activity")
 st.write(
-    "This page shows a real-time event loop that polls for a global summary of all users' preferences every 5 seconds. It also subscribes to Google News for the latest fashion news and updates a summary of recent news every 10 minutes."
+    "This page shows a stream of all users' activity. It also subscribes to Google News for the latest fashion news and updates a summary of recent news every 10 minutes."
 )
 
 # Initialize session state for last update time
@@ -60,7 +60,6 @@ while True:
         st.session_state.global_last_update = time.time()
 
         with GlobalSummaries("production", disable_update_task=True) as gs:
-            user_activity_summary = gs.read_state("user_activity_summary")
             all_user_activity = gs.read_state("user_activity")
             news_summary = gs.read_state("news_summary")
 
@@ -69,9 +68,6 @@ while True:
             # Show a summary
             st.write("**Recent News Summary**")
             st.success(news_summary)
-
-            st.write("#### All user activity summary")
-            st.warning(user_activity_summary)
 
             st.write("#### Latest User Activity")
             # Display the user activity list of (timestamp, user_activity) pairs
