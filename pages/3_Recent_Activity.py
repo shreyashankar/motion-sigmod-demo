@@ -1,7 +1,5 @@
 import sys
 
-sys.path.append("//Users/shreyashankar/Documents/hacking/motion-fashion")
-
 from collections import defaultdict
 import streamlit as st
 from fashion.globalsummaries import GlobalSummaries
