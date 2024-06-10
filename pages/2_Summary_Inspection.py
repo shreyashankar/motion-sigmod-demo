@@ -19,7 +19,7 @@ import json
 
 st.set_page_config(layout="wide")
 
-st.subheader("Prompt Sub-Parts")
+st.subheader("Inspect Incrementally-Maintained Summaries Used in Prompts")
 st.write(
     "Each sub-part of the prompt gets updated separately. Some are the results of LLM calls (e.g., `previous_recommendations` is an extracted list of short items from the notes on the left, and `search_query_summary` is an LLM-generated summary of previous search queries)."
 )
@@ -37,6 +37,13 @@ if "query_summary_diff" not in st.session_state:
     st.session_state.query_summary_diff = defaultdict(str)
 if "selected_index" not in st.session_state:
     st.session_state.selected_index = 0
+if "first_time" not in st.session_state:
+    st.session_state.first_time = True
+
+# Display the summary trends
+global_state = motion.inspect_state("GlobalSummaries__production")
+st.write("**Latest News Summary** (In Every User's Prompt)")
+st.success(global_state["news_summary"])
 
 # Show a dropdown list of all the states in st.session_state.old_state
 sorted_keys = sorted(
@@ -49,7 +56,7 @@ options = [
     for key in sorted_keys
 ]
 instance_prettified = st.selectbox(
-    "Select a user_id to inspect",
+    "Select a user_id to inspect user-specific sub-parts",
     options,
     index=st.session_state.selected_index,
     key="instance_prettified",
@@ -85,9 +92,13 @@ while True:
     # List all instances of the Fashion component
     instances = motion.get_instances("Fashion")
 
-    # Check if 5 seconds have passed
-    if time.time() - st.session_state.global_last_update > 2:
+    # Check if 2 seconds have passed
+    if (
+        st.session_state.first_time
+        or time.time() - st.session_state.global_last_update > 2
+    ):
         is_changed = False
+        st.session_state.first_time = False
 
         for instance in instances:
 

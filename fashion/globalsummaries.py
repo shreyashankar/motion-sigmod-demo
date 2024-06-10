@@ -30,6 +30,10 @@ def setup():
 
 @GlobalSummaries.update("news")
 def update_news_summary(state, props):
+    # Check if timestamp is more than 10 minutes ago
+    if props["timestamp"] - state["last_news_update"] < 600:
+        return {}
+
     # Get the urls to summarize
     new_items = props["urls_and_news_texts"]  # list of (url, (text, img_url)) tuples
 
@@ -109,6 +113,7 @@ def update_news_summary(state, props):
         "urls_summarized": urls,
         "news_summary": new_summary,
         "raw_news": raw_news,
+        "last_news_update": props["timestamp"],
     }
 
 
