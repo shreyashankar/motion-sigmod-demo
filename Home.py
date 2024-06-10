@@ -14,7 +14,9 @@ st.sidebar.success("Select a mode of exploration.")
 st.markdown(
     """
     Motion is a framework that enables LLM pipeline developers to define and incrementally maintain self-updating prompts in Python.
+    
     **👈 Select a mode of exploration** to either (as an end-user) interact with a Motion-powered application or (as a developer) explore summaries of user feedback and external context incrementally maintained by Motion.
+    
     ### Be an End-User: Explore our AI Stylist Application
     - Our AI stylist application takes into consideration some basic information about you and suggests items to buy for events of your choice.
     - You can toggle between using Motion's summaries and not using them to see the difference in the quality of recommendations and the speed of the application. 

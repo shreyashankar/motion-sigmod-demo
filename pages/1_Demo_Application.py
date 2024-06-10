@@ -109,7 +109,7 @@ if st.session_state.get("user_info") is None:
     with st.form(key="user_info_form"):
         user_id = st.text_input("User ID", "test_user_1234")
         gender = st.selectbox("Gender", ["Male", "Female", "Non-binary"])
-        occupation = st.text_input(
+        occupation = st.text_area(
             "About Yourself", "Researcher, computer scientist, dog dad"
         )
         age = st.slider("How old are you?", 15, 100, 30)
@@ -147,8 +147,10 @@ else:
     if "random_event_query" not in st.session_state:
         st.session_state.random_event_query = ""
 
-    query = st.text_input(
-        "What event do you want to be styled for?", st.session_state.random_event_query
+    st.write("#### Event Styling")
+
+    query = st.text_area(
+        "What do you want to be styled for?", st.session_state.random_event_query
     )
 
     refresh = st.button("Or refresh with a random event I might like")
@@ -164,6 +166,8 @@ else:
         st.session_state.query = query
         with st.spinner("Querying LLM..."):
             i = 0
+            # Show the first set of recommendations
+            st.write("#### Results")
             placeholder_latency = st.empty()
             placeholder_buttons = st.columns([0.25, 0.25, 0.5])
             columns_of_products = st.columns(5)
@@ -190,7 +194,7 @@ else:
                         "Love these ideas ❤️", key=f"like_{i}"
                     )
                     with placeholder_buttons[1].popover("Don't like this outfit 👎"):
-                        dislike_feedback = st.text_input(
+                        dislike_feedback = st.text_area(
                             "Why don't you like this?",
                             key=f"dislike_feedback_ti",
                             value=st.session_state.dislike_feedback,
