@@ -110,7 +110,7 @@ if st.session_state.get("user_info") is None:
         user_id = st.text_input("User ID", "test_user_1234")
         gender = st.selectbox("Gender", ["Male", "Female", "Non-binary"])
         occupation = st.text_input(
-            "Occupation", "Researcher, computer scientist, dog dad"
+            "About Yourself", "Researcher, computer scientist, dog dad"
         )
         age = st.slider("How old are you?", 15, 100, 30)
         submitted = st.form_submit_button("Submit")
@@ -165,7 +165,7 @@ else:
         with st.spinner("Querying LLM..."):
             i = 0
             placeholder_latency = st.empty()
-            placeholder_buttons = st.columns([0.2, 0.3, 0.3, 0.2])
+            placeholder_buttons = st.columns([0.25, 0.25, 0.5])
             columns_of_products = st.columns(5)
 
             # Get user info

@@ -266,7 +266,7 @@ def update_search_queries(state, props):
                     },
                     {
                         "role": "user",
-                        "content": f"Here's my previous list of events I've wanted to be styled for: {state['search_history']}\n\nHere's the previous summary of my style: {summary}\n\nI've made a new query, {query}. Please generate a new style summary with all of the above information. Keep your summary at 3 sentences, describing my lifestyle, preferences, and other information a stylist should consider when styling me in the future (e.g., hard dislikes, dress codes, styles, etc). Your summary should not include any filler text or flowery language.",
+                        "content": f"Here's my previous list of events I've wanted to be styled for: {state['search_history']}\n\nHere's the previous summary of my style: {summary}\n\nI've made a new query, {query}. Please generate a new style summary with all of the above information. Keep your summary at 3 sentences, describing my lifestyle, preferences, and other information a stylist should consider when styling me in the future (e.g., hard dislikes, dress codes, styles, etc). Common styles to choose from are casual, retro, classic & elegant, goth, edgy, boho, hipster, etc. Your summary should not include any filler text or flowery language.",
                     },
                 ],
             )
@@ -321,7 +321,7 @@ def update_feedback(state, props):
         gs.run(
             "user_activity",
             props={
-                "user_activity": f"User {state.instance_id} gave feedback of type {action} for outfit {outfit}",
+                "user_activity": f"User {state.instance_id} gave feedback {feedback} of type {action} for outfit {outfit}",
                 "timestamp": time.time(),
             },
             flush_update=True,
