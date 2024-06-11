@@ -14,7 +14,7 @@ st.markdown(
     """
     Motion is a framework that enables LLM pipeline developers to define and incrementally maintain self-updating prompts in Python.
     
-    **👈 Select a mode of exploration** to either (as an end-user) interact with a Motion-powered application or (as a developer) explore summaries of user feedback and external context incrementally maintained by Motion.
+    **👈 Select a mode of exploration** to either interact with a Motion-powered application as an end-user or as a developer.
     
     ### Be an End-User: Explore our AI Stylist Application
     - Our stylist application uses your basic information to recommend items for your chosen events.
