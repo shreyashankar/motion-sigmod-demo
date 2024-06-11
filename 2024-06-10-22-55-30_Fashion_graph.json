@@ -1,0 +1,213 @@
+{
+    "name": "Fashion",
+    "nodes": [
+        {
+            "id": "2",
+            "position": {
+                "x": 0,
+                "y": 200
+            },
+            "data": {
+                "label": "note"
+            },
+            "type": "key"
+        },
+        {
+            "id": "3",
+            "position": {
+                "x": 200,
+                "y": 200
+            },
+            "data": {
+                "label": "note",
+                "udf": "@Fashion.serve(\"note\")\ndef note(state, props):\n    recommendation = props[\"recommendation\"]\n    query = props[\"event\"]\n    gender = state[\"gender\"]\n    use_summaries = props.get(\"use_summaries\", True)\n\n    if use_summaries:\n        query_summary = state[\"query_summary\"]\n        if len(query_summary) > 0:\n            query_summary = f\" Here's a summary of my previous searches, which you can use to figure out my lifestyle and potential wardrobe preferences: {query_summary}.\"\n\n        # Get the trends\n        with GlobalSummaries(\"production\", disable_update_task=True) as gs:\n            news_summary = gs.read_state(\"news_summary\")\n\n        return client.chat.completions.create(\n            model=\"gpt-4o\",\n            response_model=NotePrompt,\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. Here are the latest fashion trends: {news_summary}\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"I am your client, a {state['occupation']} and {state['age']} years old.{query_summary} For `{query}`, you recommended the following item for me to buy: {recommendation}. Please write a short 1 sentence note for why I should buy this item, referencing my occupation, style summary, fashion trends, and preferences if they are relevant to the event. If you don't have enough information, describe why this item is in style or why it's a good fit for the event.\",\n                },\n            ],\n        ).note  # type: ignore\n\n    else:\n        # Just dump all context into the prompt\n        raw_previous_recs = state[\"raw_previous_recommendations\"]\n        raw_user_feedback = state[\"raw_user_feedback\"]\n\n        # Get the trends\n        with GlobalSummaries(\"production\", disable_update_task=True) as gs:\n            raw_news = gs.read_state(\"raw_news\")\n\n        return client.chat.completions.create(\n            model=\"gpt-4o\",\n            response_model=NotePrompt,\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. In the past, you have recommended the following items for me to buy: {raw_previous_recs}. I've also provided feedback on the following items: {raw_user_feedback}. Here are the latest fashion trends: {raw_news}\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"I am your client, a {state['occupation']} and {state['age']} years old. For `{query}`, you recommended the following item for me to buy: {recommendation}. Please write a short 1 sentence note for why I should buy this item, referencing my occupation, style summary, and preferences if they are relevant to the event. If you don't have enough information, describe why this item is in style or why it's a good fit for the event.\",\n                },\n            ],\n        ).note\n"
+            },
+            "type": "serve"
+        },
+        {
+            "id": "4",
+            "position": {
+                "x": 0,
+                "y": 300
+            },
+            "data": {
+                "label": "recommend"
+            },
+            "type": "key"
+        },
+        {
+            "id": "5",
+            "position": {
+                "x": 200,
+                "y": 300
+            },
+            "data": {
+                "label": "recommend",
+                "udf": "@Fashion.serve(\"recommend\")\ndef recommend(state, props):\n    # Construct prompt\n    query = props[\"event\"]\n    gender = state[\"gender\"]\n    use_summaries = props.get(\"use_summaries\", True)\n    print(f\"Use summaries: {use_summaries}\")\n\n    if use_summaries:\n        already_rec = state[\"previous_recommendations\"].get(query.lower(), [])\n        if len(already_rec) > 0:\n            already_rec = \", \".join(already_rec)\n            already_rec = (\n                f\" Avoid recommending anything similar to the following: {already_rec}.\"\n            )\n        else:\n            already_rec = \"\"\n        query_summary = state[\"query_summary\"]\n        if len(query_summary) > 0:\n            query_summary = f\" Here's a summary of my previous searches, which you can use to figure out my lifestyle and potential wardrobe preferences: {query_summary}.\"\n\n        # Get the trends\n        with GlobalSummaries(\"production\", disable_update_task=True) as gs:\n            news_summary = gs.read_state(\"news_summary\")\n\n        return client.chat.completions.create(\n            model=\"gpt-4o\",\n            response_model=RecommendationPrompt,\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. Here are the latest fashion trends: {news_summary}\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"I am your client, a {state['occupation']} and {state['age']} years old.{query_summary} What {gender} apparel items should I buy to wear to {query}?{already_rec} Make sure your suggestions are appropriate for the event. Be highly specific for each item, including colors, cuts, and styles. Each item should be ~5 words long.\",\n                },\n            ],\n        )  # type: ignore\n\n    else:\n        # Just dump all context into the prompt\n        raw_previous_recs = state[\"raw_previous_recommendations\"]\n        raw_user_feedback = state[\"raw_user_feedback\"]\n\n        # Get the trends\n        with GlobalSummaries(\"production\", disable_update_task=True) as gs:\n            raw_news = gs.read_state(\"raw_news\")\n\n        already_rec = raw_previous_recs\n        if len(already_rec) > 0:\n            already_rec = \", \".join(already_rec)\n            already_rec = (\n                f\" Avoid recommending anything similar to the following: {already_rec}.\"\n            )\n        else:\n            already_rec = \"\"\n\n        return client.chat.completions.create(\n            model=\"gpt-4o\",\n            response_model=RecommendationPrompt,\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. Here are the latest fashion trends: {raw_news}\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"I am your client, a {state['occupation']} and {state['age']} years old. I've provided feedback on the following items: {raw_user_feedback}. What {gender} apparel items should I buy to wear to {query}?{already_rec} Make sure your suggestions are appropriate for the event. Be highly specific for each item, including colors, cuts, and styles. Each item should be ~5 words long.\",\n                },\n            ],\n        )  # type: ignore\n"
+            },
+            "type": "serve"
+        },
+        {
+            "id": "6",
+            "position": {
+                "x": 800,
+                "y": 300
+            },
+            "data": {
+                "label": "update_previous_recommendations",
+                "udf": "@Fashion.update(\"recommend\")\ndef update_previous_recommendations(state, props):\n    # Ask LLM to extract items from the serve_result\n    llm_response = props.serve_result.model_dump()\n    gender = state[\"gender\"]\n    query = props[\"event\"]\n    raw_previous_recommendations = state[\"raw_previous_recommendations\"] + [\n        str(llm_response)\n    ]\n\n    already_rec = state[\"previous_recommendations\"].get(query.lower(), [])\n    if len(already_rec) > 0:\n        already_rec = \", \".join(already_rec)\n        already_rec = f\" You have also recommended {already_rec}.\"\n    else:\n        already_rec = \"\"\n\n    items = client.chat.completions.create(\n        model=\"gpt-4o\",\n        response_model=ItemListPrompt,\n        messages=[\n            {\n                \"role\": \"system\",\n                \"content\": f\"You are a professional stylist for {gender}.\",\n            },\n            {\n                \"role\": \"user\",\n                \"content\": f\"You recommended the following items for `{query}`: {str(llm_response)}.{already_rec} From these recommendations, generate a list of at most 5 items you've recommended, with each item being no more than 3 words long.\",\n            },\n        ],\n    )  # type: ignore\n\n    recs = state[\"previous_recommendations\"]\n    recs[query.lower()] = items.recommendations\n    return {\n        \"previous_recommendations\": recs,\n        \"raw_previous_recommendations\": raw_previous_recommendations,\n    }\n"
+            },
+            "type": "update"
+        },
+        {
+            "id": "7",
+            "position": {
+                "x": 1400,
+                "y": 300
+            },
+            "data": {
+                "label": "update_search_queries",
+                "udf": "@Fashion.update(\"recommend\")\ndef update_search_queries(state, props):\n    # Maintain a summary of search queries\n    query = props[\"event\"]\n    gender = state[\"gender\"]\n    queries = state[\"search_history\"] + [query]\n    summary = state[\"query_summary\"]\n\n    print(f\"Creating a summary for user {state.instance_id}\")\n\n    summary = (\n        oai_client.chat.completions.create(\n            model=\"gpt-4o\",\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. I've been asking you for recommendations for what to buy for various events.\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"Here's my previous list of events I've wanted to be styled for: {state['search_history']}\\n\\nHere's the previous summary of my style: {summary}\\n\\nI've made a new query, {query}. Please generate a new style summary with all of the above information. Keep your summary at 3 sentences, describing my lifestyle, preferences, and other information a stylist should consider when styling me in the future (e.g., hard dislikes, dress codes, styles, etc). Common styles to choose from are casual, retro, classic & elegant, goth, edgy, boho, hipster, etc. Your summary should not include any filler text or flowery language.\",\n                },\n            ],\n        )\n        .choices[0]\n        .message.content\n    )\n\n    with GlobalSummaries(\"production\") as gs:\n        gs.run(\n            \"user_activity\",\n            props={\n                \"user_activity\": f\"User {state.instance_id} searched for {query}\",\n                \"timestamp\": time.time(),\n            },\n            flush_update=True,\n            ignore_cache=True,\n        )\n\n    return {\"search_history\": queries, \"query_summary\": summary}\n"
+            },
+            "type": "update"
+        },
+        {
+            "id": "8",
+            "position": {
+                "x": 0,
+                "y": 400
+            },
+            "data": {
+                "label": "random_event"
+            },
+            "type": "key"
+        },
+        {
+            "id": "9",
+            "position": {
+                "x": 200,
+                "y": 400
+            },
+            "data": {
+                "label": "random_event",
+                "udf": "@Fashion.serve(\"random_event\")\ndef random_event(state, props):\n    query_summary = state[\"query_summary\"]\n    if len(query_summary) > 0:\n        query_summary = f\"Based on my style profile: {query_summary}\"\n    else:\n        query_summary = \"Based on my profile\"\n\n    response = oai_client.chat.completions.create(\n        model=\"gpt-4o\",\n        messages=[\n            {\n                \"role\": \"system\",\n                \"content\": \"You are a helpful assistant.\",\n            },\n            {\n                \"role\": \"user\",\n                \"content\": f\"{query_summary}, suggest a specific type of event that might interest me, totally different from previous events that I've attended (e.g., hiking in Japan, a Beatles concert, dinner in Paris, brunch in Central Park in Manhattan, skiing in the Alps, a workout class in all lululemon). Don't suggest wine tasting in Napa Valley. Your answer should be a short phrase (~8 words).\",\n            },\n        ],\n    )\n\n    return response.choices[0].message.content\n"
+            },
+            "type": "serve"
+        },
+        {
+            "id": "10",
+            "position": {
+                "x": 0,
+                "y": 500
+            },
+            "data": {
+                "label": "user_feedback"
+            },
+            "type": "key"
+        },
+        {
+            "id": "11",
+            "position": {
+                "x": 800,
+                "y": 500
+            },
+            "data": {
+                "label": "update_feedback",
+                "udf": "@Fashion.update(\"user_feedback\")\ndef update_feedback(state, props):\n    feedback = props.get(\"feedback\", \"\")\n    feedback_str = f\"(Feedback: {feedback})\" if len(feedback) > 0 else \"\"\n    action = props[\"action\"]  # Love or dislike\n    outfit = props[\"outfit\"]\n    event = props[\"event\"]\n    gender = state[\"gender\"]\n    raw_user_feedback = state[\"raw_user_feedback\"] + [str(props)]\n\n    # Merge this into the style summary\n    summary = (\n        oai_client.chat.completions.create(\n            model=\"gpt-4o\",\n            messages=[\n                {\n                    \"role\": \"system\",\n                    \"content\": f\"You are a professional stylist for {gender}. I've been asking you for recommendations for what to buy for various events.\",\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"Here's the previous summary of my style: {state['query_summary']}\\n\\nI've provided the following feedback, I said I {action} the outfit `{outfit}` for the event `{event}` {feedback_str}. Please incorporate this feedback into my style summary, keeping it at 3 sentences, describing my lifestyle, preferences, and other information a stylist should consider when styling me in the future (e.g., hard dislikes, dress codes, styles, etc). Your summary should not include any filler text or flowery language.\",\n                },\n            ],\n        )\n        .choices[0]\n        .message.content\n    )\n\n    with GlobalSummaries(\"production\") as gs:\n        gs.run(\n            \"user_activity\",\n            props={\n                \"user_activity\": f\"User {state.instance_id} gave feedback {feedback} of type {action} for outfit {outfit}\",\n                \"timestamp\": time.time(),\n            },\n            flush_update=True,\n            ignore_cache=True,\n        )\n\n    return {\"query_summary\": summary, \"raw_user_feedback\": raw_user_feedback}\n"
+            },
+            "type": "update"
+        },
+        {
+            "id": "1",
+            "position": {
+                "x": 1000,
+                "y": 0
+            },
+            "data": {
+                "label": "state"
+            },
+            "type": "state"
+        }
+    ],
+    "edges": [
+        {
+            "id": "e2-3",
+            "source": "2",
+            "target": "3",
+            "targetHandle": "left"
+        },
+        {
+            "id": "e1-3",
+            "source": "1",
+            "target": "3",
+            "targetHandle": "top"
+        },
+        {
+            "id": "e4-5",
+            "source": "4",
+            "target": "5",
+            "targetHandle": "left"
+        },
+        {
+            "id": "e1-5",
+            "source": "1",
+            "target": "5",
+            "targetHandle": "top"
+        },
+        {
+            "id": "e6-1",
+            "target": "1",
+            "source": "6",
+            "sourceHandle": "top",
+            "animated": true
+        },
+        {
+            "id": "e5-6",
+            "source": "5",
+            "sourceHandle": "right",
+            "target": "6",
+            "targetHandle": "left",
+            "animated": true
+        },
+        {
+            "id": "e7-1",
+            "target": "1",
+            "source": "7",
+            "sourceHandle": "top",
+            "animated": true
+        },
+        {
+            "id": "e5-7",
+            "source": "5",
+            "sourceHandle": "right",
+            "target": "7",
+            "targetHandle": "left",
+            "animated": true
+        },
+        {
+            "id": "e8-9",
+            "source": "8",
+            "target": "9",
+            "targetHandle": "left"
+        },
+        {
+            "id": "e1-9",
+            "source": "1",
+            "target": "9",
+            "targetHandle": "top"
+        },
+        {
+            "id": "e11-1",
+            "target": "1",
+            "source": "11",
+            "sourceHandle": "top",
+            "animated": true
+        },
+        {
+            "id": "e10-11",
+            "source": "10",
+            "target": "11",
+            "targetHandle": "left"
+        }
+    ]
+}

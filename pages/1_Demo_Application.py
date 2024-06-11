@@ -147,6 +147,15 @@ else:
     if "random_event_query" not in st.session_state:
         st.session_state.random_event_query = ""
 
+    # Include a description about the context
+    st.error(
+        "Context for the LLM prompt includes:\n"
+        "- News articles from the last hour related to fashion\n"
+        "- Your previously searched events\n"
+        "- Historical suggestions from the LLMs to improve diversity and avoid repetition\n"
+        "- Your historical feedback (likes and dislikes)"
+    )
+
     st.write("#### Event Styling")
 
     query = st.text_area(

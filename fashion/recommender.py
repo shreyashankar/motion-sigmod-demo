@@ -9,13 +9,14 @@ from motion import Component
 import os
 from openai import OpenAI
 import instructor
-from fashion.utils import (
-    RecommendationPrompt,
-    ItemListPrompt,
-    SummaryPrompt,
-    NotePrompt,
-    EventSuggestionPrompt,
-)
+
+# from fashion.utils import (
+#     RecommendationPrompt,
+#     ItemListPrompt,
+#     SummaryPrompt,
+#     NotePrompt,
+#     EventSuggestionPrompt,
+# )
 from fashion.globalsummaries import GlobalSummaries
 
 from rich import print
@@ -255,24 +256,23 @@ def update_search_queries(state, props):
 
     print(f"Creating a summary for user {state.instance_id}")
 
-    if len(queries) >= 2:
-        summary = (
-            oai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": f"You are a professional stylist for {gender}. I've been asking you for recommendations for what to buy for various events.",
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Here's my previous list of events I've wanted to be styled for: {state['search_history']}\n\nHere's the previous summary of my style: {summary}\n\nI've made a new query, {query}. Please generate a new style summary with all of the above information. Keep your summary at 3 sentences, describing my lifestyle, preferences, and other information a stylist should consider when styling me in the future (e.g., hard dislikes, dress codes, styles, etc). Common styles to choose from are casual, retro, classic & elegant, goth, edgy, boho, hipster, etc. Your summary should not include any filler text or flowery language.",
-                    },
-                ],
-            )
-            .choices[0]
-            .message.content
+    summary = (
+        oai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are a professional stylist for {gender}. I've been asking you for recommendations for what to buy for various events.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Here's my previous list of events I've wanted to be styled for: {state['search_history']}\n\nHere's the previous summary of my style: {summary}\n\nI've made a new query, {query}. Please generate a new style summary with all of the above information. Keep your summary at 3 sentences, describing my lifestyle, preferences, and other information a stylist should consider when styling me in the future (e.g., hard dislikes, dress codes, styles, etc). Common styles to choose from are casual, retro, classic & elegant, goth, edgy, boho, hipster, etc. Your summary should not include any filler text or flowery language.",
+                },
+            ],
         )
+        .choices[0]
+        .message.content
+    )
 
     with GlobalSummaries("production") as gs:
         gs.run(
